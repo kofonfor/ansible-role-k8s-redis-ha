@@ -1,0 +1,14 @@
+- name: put /root/k8s-redis-ha-config.yaml
+  template: src=k8s-redis-ha-config.yaml dest=/root/k8s-redis-ha-config.yaml
+
+- name: check if a Helm release for redis-ha-cluster is present
+  shell: helm list --namespace={{ redis_ha_cluster_namespace }} | grep redis-ha-cluster-release
+  register: result
+  ignore_errors: true
+
+- name: enable the incubator repo
+  shell: helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/
+
+- name: install a Redis HA cluster using a Helm chart
+  shell: helm install -f /root/k8s-redis-ha-config.yaml stable/redis-ha --namespace {{ redis_ha_cluster_namespace }} --name redis-ha-cluster-release
+  when: result|failed
